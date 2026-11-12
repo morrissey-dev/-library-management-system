@@ -4,6 +4,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PrismaModule } from "./prisma/prisma.module.js";
 import { BooksModule } from './books/books.module.js';
+import { GenresModule } from './genres/genres.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -19,6 +20,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       serviceId: 'api',
     }),
     BooksModule,
+    GenresModule,
   ],
   controllers: [AppController],
   providers: [AppService],
