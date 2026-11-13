@@ -1,3 +1,4 @@
+import * as bcrypt from "bcrypt";
 import { readFileSync } from "node:fs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import "dotenv/config";
@@ -22,6 +23,45 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+    // Provision the first librarian account.
+  const librarianName = process.env.LIBRARIAN_NAME;
+  const librarianEmail = process.env.LIBRARIAN_EMAIL;
+  const librarianPassword = process.env.LIBRARIAN_PASSWORD;
+
+  if (!librarianName || !librarianEmail || !librarianPassword) {
+    throw new Error("Librarian environment variables are missing.");
+  }
+
+  const existingLibrarian = await prisma.user.findUnique({
+    where: { email: librarianEmail },
+    select: {
+      id: true,
+      role: true,
+    },
+  });
+
+  if (existingLibrarian) {
+    if (existingLibrarian.role !== "LIBRARIAN") {
+      throw new Error(
+        "The configured librarian email belongs to a non-librarian account. Review it manually.",
+      );
+    }
+
+    console.log("Librarian account already exists. Skipping creation.");
+  } else {
+    const passwordHash = await bcrypt.hash(librarianPassword, 10);
+
+    await prisma.user.create({
+      data: {
+        name: librarianName,
+        email: librarianEmail,
+        passwordHash,
+        role: "LIBRARIAN",
+      },
+    });
+
+    console.log("First librarian account created successfully.");
+  }
   // Create the four genres, or reuse them if they already exist.
   const genreNames = [
     "Fiction",
